@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace Tarjeta
+namespace TransporteUrbano
 {
     public class Tarjeta
     {
@@ -25,14 +25,12 @@ namespace Tarjeta
                 saldo = 0;
                 return;
             }
-
             if (saldoInicial > LIMITE_SALDO)
             {
                 Console.WriteLine($"Error: El saldo inicial no puede superar el límite de ${LIMITE_SALDO}. Se establecerá en 0.");
                 saldo = 0;
                 return;
             }
-
             saldo = saldoInicial;
         }
 
@@ -45,10 +43,8 @@ namespace Tarjeta
         {
             if (!cargasValidas.Contains(monto))
                 return false;
-
             if (saldo + monto > LIMITE_SALDO)
                 return false;
-
             saldo += monto;
             return true;
         }
@@ -57,10 +53,8 @@ namespace Tarjeta
         {
             if (monto < 0)
                 return false;
-
             if (saldo < monto)
                 return false;
-
             saldo -= monto;
             return true;
         }

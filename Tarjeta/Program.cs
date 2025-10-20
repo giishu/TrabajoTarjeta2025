@@ -1,6 +1,7 @@
 ﻿using System;
+using TransporteUrbano;
 
-namespace Tarjeta
+namespace TransporteUrbano
 {
     internal class Program
     {
@@ -25,7 +26,6 @@ namespace Tarjeta
             {
                 Console.WriteLine("\nPagando pasaje...");
                 Boleto boleto = colectivo.PagarCon(miTarjeta);
-
                 if (boleto != null)
                 {
                     Console.WriteLine("Boleto generado:");

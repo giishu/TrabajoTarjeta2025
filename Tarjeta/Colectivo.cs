@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Tarjeta
+namespace TransporteUrbano
 {
     public class Colectivo
     {
@@ -15,7 +15,6 @@ namespace Tarjeta
                 Linea = "N/A";
                 return;
             }
-
             Linea = linea;
         }
 
@@ -26,21 +25,17 @@ namespace Tarjeta
                 Console.WriteLine("Error: La tarjeta no puede ser null.");
                 return null;
             }
-
             if (tarjeta.ObtenerSaldo() < TARIFA_BASICA)
             {
                 Console.WriteLine($"Error: Saldo insuficiente. Se requieren ${TARIFA_BASICA} y solo tiene ${tarjeta.ObtenerSaldo()}");
                 return null;
             }
-
             bool pudoDescontar = tarjeta.DescontarSaldo(TARIFA_BASICA);
-
             if (!pudoDescontar)
             {
                 Console.WriteLine("Error: No se pudo descontar el saldo de la tarjeta");
                 return null;
             }
-
             return new Boleto(TARIFA_BASICA, tarjeta.ObtenerSaldo(), Linea);
         }
 

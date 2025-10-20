@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Tarjeta
+namespace TransporteUrbano
 {
     public class Boleto
     {
