@@ -16,7 +16,7 @@ jobs:
     - name: Setup .NET
       uses: actions/setup-dotnet@v3
       with:
-        dotnet-version: '7.0.x'
+        dotnet-version: '7.x'
     
     - name: Restore dependencies
       run: dotnet restore
@@ -24,13 +24,5 @@ jobs:
     - name: Build
       run: dotnet build --no-restore
     
-    - name: Run tests with coverage
-      run: dotnet test --no-build --verbosity normal --logger "console;verbosity=detailed" /p:CollectCoverage=true /p:CoverletOutputFormat=opencover /p:CoverletOutput=./coverage/
-    
-    - name: Upload coverage to Codecov
-      uses: codecov/codecov-action@v3
-      with:
-        files: ./TestTarjeta/coverage/coverage.opencover.xml
-        flags: unittests
-        name: codecov-umbrella
-        fail_ci_if_error: false
+    - name: Run tests
+      run: dotnet test --no-build --verbosity normal
