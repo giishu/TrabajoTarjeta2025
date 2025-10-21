@@ -5,12 +5,13 @@ namespace TransporteUrbano
 {
     public class Tarjeta
     {
-        private decimal saldo;
+        protected decimal saldo;
         private readonly List<decimal> cargasValidas = new List<decimal>
         {
             2000, 3000, 4000, 5000, 8000, 10000, 15000, 20000, 25000, 30000
         };
         private const decimal LIMITE_SALDO = 40000;
+        private const decimal SALDO_NEGATIVO_PERMITIDO = -1200;
 
         public Tarjeta()
         {
@@ -34,7 +35,7 @@ namespace TransporteUrbano
             saldo = saldoInicial;
         }
 
-        public decimal ObtenerSaldo()
+        public virtual decimal ObtenerSaldo()
         {
             return saldo;
         }
@@ -43,25 +44,41 @@ namespace TransporteUrbano
         {
             if (!cargasValidas.Contains(monto))
                 return false;
-            if (saldo + monto > LIMITE_SALDO)
+
+            // Si hay saldo negativo, primero se descuenta de la carga
+            decimal nuevoSaldo = saldo + monto;
+
+            // Validar que no exceda el límite superior
+            if (nuevoSaldo > LIMITE_SALDO)
                 return false;
-            saldo += monto;
+
+            saldo = nuevoSaldo;
             return true;
         }
 
-        public bool DescontarSaldo(decimal monto)
+        public virtual bool DescontarSaldo(decimal monto)
         {
             if (monto < 0)
                 return false;
-            if (saldo < monto)
+
+            decimal nuevoSaldo = saldo - monto;
+
+            // Verificar que no se exceda el límite de saldo negativo
+            if (nuevoSaldo < SALDO_NEGATIVO_PERMITIDO)
                 return false;
-            saldo -= monto;
+
+            saldo = nuevoSaldo;
             return true;
         }
 
         public List<decimal> ObtenerCargasValidas()
         {
             return new List<decimal>(cargasValidas);
+        }
+
+        public decimal ObtenerSaldoNegativoPermitido()
+        {
+            return SALDO_NEGATIVO_PERMITIDO;
         }
     }
 }
