@@ -59,11 +59,13 @@ public class ColectivoTests
     }
 
     [Test]
-    public void PagarCon_ConTarjetaConSaldoInsuficiente_RetornaNull()
+    public void PagarCon_ConTarjetaConSaldoInsuficiente_PermiteViajeConSaldoNegativo()
     {
         var tarjetaBaja = new Tarjeta(1000);
         Boleto boleto = colectivo.PagarCon(tarjetaBaja);
-        Assert.IsNull(boleto);
+
+        Assert.IsNotNull(boleto); // Ahora sí genera boleto con saldo negativo
+        Assert.That(tarjetaBaja.ObtenerSaldo(), Is.EqualTo(-580m)); // 1000 - 1580 = -580
     }
 
     [Test]
@@ -103,5 +105,25 @@ public class ColectivoTests
 
         col.PagarCon(tarjetaConMuchoDinero);
         Assert.That(tarjetaConMuchoDinero.ObtenerSaldo(), Is.EqualTo(5260m));
+    }
+
+    [Test]
+    public void PagarCon_ConSaldoInsuficientePeroMenorA1200_PermiteViajeConSaldoNegativo()
+    {
+        var tarjetaBaja = new Tarjeta(500);
+        Boleto boleto = colectivo.PagarCon(tarjetaBaja);
+
+        Assert.IsNotNull(boleto);
+        Assert.That(tarjetaBaja.ObtenerSaldo(), Is.EqualTo(-1080m));
+    }
+
+    [Test]
+    public void PagarCon_ConSaldoCasi1200Negativos_NoPermiteViaje()
+    {
+        var tarjetaBaja = new Tarjeta(200);
+        Boleto boleto = colectivo.PagarCon(tarjetaBaja);
+
+        Assert.IsNull(boleto);
+        Assert.That(tarjetaBaja.ObtenerSaldo(), Is.EqualTo(200m));
     }
 }
