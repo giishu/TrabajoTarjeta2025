@@ -98,12 +98,12 @@ public class TarjetaTests
     }
 
     [Test]
-    public void DescontarSaldo_ConSaldoInsuficiente_RetornaFalso()
+    public void DescontarSaldo_ConSaldoInsuficiente_PermiteSaldoNegativoHastaElLimite()
     {
         var tarjetaConSaldo = new Tarjeta(1000);
         bool resultado = tarjetaConSaldo.DescontarSaldo(2000);
-        Assert.IsFalse(resultado);
-        Assert.That(tarjetaConSaldo.ObtenerSaldo(), Is.EqualTo(1000m));
+        Assert.IsTrue(resultado); // Ahora permite saldo negativo
+        Assert.That(tarjetaConSaldo.ObtenerSaldo(), Is.EqualTo(-1000m));
     }
 
     [Test]
@@ -131,5 +131,62 @@ public class TarjetaTests
         Assert.That(cargasValidas.Count, Is.EqualTo(10));
         Assert.Contains(2000m, cargasValidas);
         Assert.Contains(30000m, cargasValidas);
+    }
+
+    // ===== TESTS NUEVOS PARA SALDO NEGATIVO =====
+
+    [Test]
+    public void DescontarSaldo_PermiteSaldoNegativoHasta1200()
+    {
+        var tarjetaConSaldo = new Tarjeta(500);
+        bool resultado = tarjetaConSaldo.DescontarSaldo(1580);
+        Assert.IsTrue(resultado);
+        Assert.That(tarjetaConSaldo.ObtenerSaldo(), Is.EqualTo(-1080m));
+    }
+
+    [Test]
+    public void DescontarSaldo_NoPermiteSaldoNegativoMayorA1200()
+    {
+        var tarjetaConSaldo = new Tarjeta(200);
+        bool resultado = tarjetaConSaldo.DescontarSaldo(1580);
+        Assert.IsFalse(resultado);
+        Assert.That(tarjetaConSaldo.ObtenerSaldo(), Is.EqualTo(200m));
+    }
+
+    [Test]
+    public void CargarSaldo_ConSaldoNegativo_DescuentaElDebitoAntesDeSumar()
+    {
+        var tarjetaConSaldo = new Tarjeta(500);
+        tarjetaConSaldo.DescontarSaldo(1580); // Saldo: -1080
+        bool resultado = tarjetaConSaldo.CargarSaldo(3000);
+        Assert.IsTrue(resultado);
+        Assert.That(tarjetaConSaldo.ObtenerSaldo(), Is.EqualTo(1920m)); // -1080 + 3000 = 1920
+    }
+
+    [Test]
+    public void DescontarSaldo_MultiplesViajesPlus_NoExcedeLimiteNegativo()
+    {
+        var tarjetaConSaldo = new Tarjeta(500);
+
+        // Primer viaje plus: 500 - 1580 = -1080
+        bool primerViaje = tarjetaConSaldo.DescontarSaldo(1580);
+        Assert.IsTrue(primerViaje);
+        Assert.That(tarjetaConSaldo.ObtenerSaldo(), Is.EqualTo(-1080m));
+
+        // Segundo viaje plus: -1080 - 1580 = -2660 (excede límite)
+        bool segundoViaje = tarjetaConSaldo.DescontarSaldo(1580);
+        Assert.IsFalse(segundoViaje);
+        Assert.That(tarjetaConSaldo.ObtenerSaldo(), Is.EqualTo(-1080m));
+    }
+
+    [Test]
+    public void CargarSaldo_ConSaldoNegativoYCargaMayor_NoExcedeLimite()
+    {
+        var tarjetaConSaldo = new Tarjeta(500);
+        tarjetaConSaldo.DescontarSaldo(1580); // Saldo: -1080
+
+        bool resultado = tarjetaConSaldo.CargarSaldo(30000);
+        Assert.IsTrue(resultado);
+        Assert.That(tarjetaConSaldo.ObtenerSaldo(), Is.EqualTo(28920m)); // -1080 + 30000
     }
 }
