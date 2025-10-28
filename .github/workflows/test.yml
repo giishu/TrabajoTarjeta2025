@@ -1,36 +1,34 @@
-name: Tests and Coverage
-
+name: .NET CI/CD with Code Coverage
 on:
   push:
-    branches: [ main, master ]
+    branches:
+      - '**'
   pull_request:
-    branches: [ main, master ]
-
+    branches:
+      - '**'
 jobs:
-  test:
-    runs-on: ubuntu-20.04
-    
+  build-and-test:
+    runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v3
-
-      - name: Setup .NET 5
-        uses: actions/setup-dotnet@v3
-        with:
-          dotnet-version: '5.0.x'
-      
-      - name: Restore dependencies
-        run: dotnet restore
-      
-      - name: Build
-        run: dotnet build --no-restore --configuration Release
-      
-      - name: Run tests with coverage
-        run: dotnet test --no-build --configuration Release --verbosity normal --logger "console;verbosity=detailed" /p:CollectCoverage=true /p:CoverletOutputFormat=cobertura /p:CoverletOutput=./coverage/
-
-      - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v4
-        with:
-          token: ${{ secrets.CODECOV_TOKEN }}
-          files: ./TestTarjeta/coverage/coverage.cobertura.xml
-          fail_ci_if_error: false
-          verbose: true
+    - name: Checkout code
+      uses: actions/checkout@v4
+   
+    - name: Setup .NET 5.0
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '5.0.x'
+    
+    - name: Restore dependencies
+      run: dotnet restore
+    
+    - name: Build
+      run: dotnet build --no-restore
+    
+    - name: Run tests with coverage
+      run: dotnet test --no-build --collect:"XPlat Code Coverage"
+    
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v5
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
+        files: ./**/coverage.cobertura.xml
