@@ -24,13 +24,13 @@ jobs:
       - name: Build
         run: dotnet build --no-restore --configuration Release
       
-      - name: Run tests and collect coverage
-        run: dotnet test --no-build --configuration Release --collect:"XPlat Code Coverage"
+      - name: Run tests with coverage
+        run: dotnet test --no-build --configuration Release --verbosity normal --logger "console;verbosity=detailed" /p:CollectCoverage=true /p:CoverletOutputFormat=cobertura /p:CoverletOutput=./coverage/
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v4
         with:
-          token: ${{ secrets.CODECOV_TOKEN }} # tu secret en GitHub
-          files: ./TestResults/**/*.cobertura.xml
-          fail_ci_if_error: true
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: ./TestTarjeta/coverage/coverage.cobertura.xml
+          fail_ci_if_error: false
           verbose: true
