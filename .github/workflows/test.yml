@@ -11,18 +11,26 @@ jobs:
     runs-on: ubuntu-20.04
     
     steps:
-    - uses: actions/checkout@v3
-    
-    - name: Setup .NET 5
-      uses: actions/setup-dotnet@v3
-      with:
-        dotnet-version: '5.0.x'
-    
-    - name: Restore dependencies
-      run: dotnet restore
-    
-    - name: Build
-      run: dotnet build --no-restore --configuration Release
-    
-    - name: Run tests
-      run: dotnet test --no-build --verbosity normal --configuration Release
+      - uses: actions/checkout@v3
+
+      - name: Setup .NET 5
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: '5.0.x'
+      
+      - name: Restore dependencies
+        run: dotnet restore
+      
+      - name: Build
+        run: dotnet build --no-restore --configuration Release
+      
+      - name: Run tests and collect coverage
+        run: dotnet test --no-build --configuration Release --collect:"XPlat Code Coverage"
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }} # tu secret en GitHub
+          files: ./TestResults/**/*.cobertura.xml
+          fail_ci_if_error: true
+          verbose: true
