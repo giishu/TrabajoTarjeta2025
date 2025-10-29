@@ -19,4 +19,8 @@
 	<ItemGroup>
 		<ProjectReference Include="..\Tarjeta\Tarjeta.csproj" />
 	</ItemGroup>
+	<PropertyGroup>
+  <TargetFramework>net5.0</TargetFramework>
+  <NoWarn>CS1591</NoWarn>
+</PropertyGroup>
 </Project>
