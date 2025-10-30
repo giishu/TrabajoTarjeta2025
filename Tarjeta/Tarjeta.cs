@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace TransporteUrbano
 {
@@ -13,13 +14,21 @@ namespace TransporteUrbano
         private const decimal LIMITE_SALDO = 40000;
         private const decimal SALDO_NEGATIVO_PERMITIDO = -1200;
 
+        protected Tiempo _tiempo;
+        protected List<DateTime> _viajes;
+
         public Tarjeta()
         {
             saldo = 0;
+            _tiempo = new Tiempo();
+            _viajes = new List<DateTime>();
         }
 
         public Tarjeta(decimal saldoInicial)
         {
+            _tiempo = new Tiempo();
+            _viajes = new List<DateTime>();
+
             if (saldoInicial < 0)
             {
                 Console.WriteLine("Error: El saldo inicial no puede ser negativo. Se establecerá en 0.");
@@ -35,6 +44,61 @@ namespace TransporteUrbano
             saldo = saldoInicial;
         }
 
+
+        public Tarjeta(Tiempo tiempo)
+        {
+            saldo = 0;
+            _tiempo = tiempo;
+            _viajes = new List<DateTime>();
+        }
+
+        public Tarjeta(decimal saldoInicial, Tiempo tiempo)
+        {
+            _tiempo = tiempo;
+            _viajes = new List<DateTime>();
+
+            if (saldoInicial < 0)
+            {
+                Console.WriteLine("Error: El saldo inicial no puede ser negativo. Se establecerá en 0.");
+                saldo = 0;
+                return;
+            }
+            if (saldoInicial > LIMITE_SALDO)
+            {
+                Console.WriteLine($"Error: El saldo inicial no puede superar el límite de ${LIMITE_SALDO}. Se establecerá en 0.");
+                saldo = 0;
+                return;
+            }
+            saldo = saldoInicial;
+        }
+
+
+        protected void RegistrarViaje()
+        {
+            _viajes.Add(_tiempo.Now());
+        }
+
+        protected int ObtenerViajesHoy()
+        {
+            DateTime hoy = _tiempo.Now().Date;
+            return _viajes.Count(v => v.Date == hoy);
+        }
+
+        protected DateTime? GetUltimoViaje()
+        {
+            return _viajes.Count > 0 ? _viajes.Last() : null;
+        }
+
+        protected bool HanPasado5MinutosDesdeUltimoViaje()
+        {
+            var ultimoViaje = GetUltimoViaje();
+            if (ultimoViaje == null) return true;
+
+            TimeSpan diferencia = _tiempo.Now() - ultimoViaje.Value;
+            return diferencia.TotalMinutes >= 5;
+        }
+
+
         public virtual decimal ObtenerSaldo()
         {
             return saldo;
@@ -45,10 +109,8 @@ namespace TransporteUrbano
             if (!cargasValidas.Contains(monto))
                 return false;
 
-            // Si hay saldo negativo, primero se descuenta de la carga
             decimal nuevoSaldo = saldo + monto;
 
-            // Validar que no exceda el límite superior
             if (nuevoSaldo > LIMITE_SALDO)
                 return false;
 
@@ -63,7 +125,6 @@ namespace TransporteUrbano
 
             decimal nuevoSaldo = saldo - monto;
 
-            // Verificar que no se exceda el límite de saldo negativo
             if (nuevoSaldo < SALDO_NEGATIVO_PERMITIDO)
                 return false;
 
