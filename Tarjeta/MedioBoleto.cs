@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 
 namespace TransporteUrbano
 {
@@ -12,6 +12,10 @@ namespace TransporteUrbano
         public MedioBoleto(Tiempo tiempo) : base(tiempo) { }
         public MedioBoleto(decimal saldoInicial, Tiempo tiempo) : base(saldoInicial, tiempo) { }
 
+        public override string ObtenerTipoTarjeta()
+        {
+            return "Medio Boleto";
+        }
 
         public override bool DescontarSaldo(decimal monto)
         {
@@ -42,17 +46,15 @@ namespace TransporteUrbano
 
             saldo = nuevoSaldo;
             RegistrarViaje();
-
             return true;
         }
-
 
         public (int viajesHoy, bool puedeViajar, decimal tarifaSugerida) ObtenerEstadoViaje()
         {
             int viajesHoy = ObtenerViajesHoy();
             bool puedeViajar = HanPasado5MinutosDesdeUltimoViaje();
             decimal tarifaSugerida = viajesHoy < LIMITE_VIAJES_DIARIOS ? 790m : 1580m;
-
+            
             return (viajesHoy, puedeViajar, tarifaSugerida);
         }
     }

@@ -29,6 +29,9 @@ namespace TransporteUrbano
             // Obtener la tarifa según el tipo de tarjeta
             decimal tarifaAPagar = ObtenerTarifa(tarjeta);
 
+            // Verificar si habrá saldo negativo después del pago
+            bool produciraSaldoNegativo = (tarjeta.ObtenerSaldo() - tarifaAPagar) < 0;
+
             // Intentar descontar el saldo
             bool pudoDescontar = tarjeta.DescontarSaldo(tarifaAPagar);
 
@@ -38,16 +41,25 @@ namespace TransporteUrbano
                 return null;
             }
 
-            return new Boleto(tarifaAPagar, tarjeta.ObtenerSaldo(), Linea);
+            // NUEVO: Crear boleto con toda la información
+            return new Boleto(
+                tarifaAbonada: tarifaAPagar,
+                saldoRestante: tarjeta.ObtenerSaldo(),
+                lineaColectivo: Linea,
+                tipoTarjeta: tarjeta.ObtenerTipoTarjeta(),
+                idTarjeta: tarjeta.Id,
+                tieneSaldoNegativo: produciraSaldoNegativo
+            );
         }
 
         protected virtual decimal ObtenerTarifa(Tarjeta tarjeta)
         {
-            if (tarjeta is MedioBoleto)
-            {
+            if (tarjeta is FranquiciaCompleta || tarjeta is BoletoGratuito)
+                return 0;
+            else if (tarjeta is MedioBoleto)
                 return TARIFA_BASICA / 2;
-            }
-            return TARIFA_BASICA;
+            else
+                return TARIFA_BASICA;
         }
 
         public decimal ObtenerTarifaBasica()

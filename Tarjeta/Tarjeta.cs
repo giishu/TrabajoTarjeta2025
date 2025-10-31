@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -14,20 +14,24 @@ namespace TransporteUrbano
         private const decimal LIMITE_SALDO = 40000;
         private const decimal SALDO_NEGATIVO_PERMITIDO = -1200;
 
+        // PROPIEDADES DE AMBAS RAMAS
         protected Tiempo _tiempo;
         protected List<DateTime> _viajes;
+        public string Id { get; private set; }
 
         public Tarjeta()
         {
             saldo = 0;
             _tiempo = new Tiempo();
             _viajes = new List<DateTime>();
+            Id = GenerarIdUnico();
         }
 
         public Tarjeta(decimal saldoInicial)
         {
             _tiempo = new Tiempo();
             _viajes = new List<DateTime>();
+            Id = GenerarIdUnico();
 
             if (saldoInicial < 0)
             {
@@ -43,19 +47,20 @@ namespace TransporteUrbano
             }
             saldo = saldoInicial;
         }
-
 
         public Tarjeta(Tiempo tiempo)
         {
             saldo = 0;
             _tiempo = tiempo;
             _viajes = new List<DateTime>();
+            Id = GenerarIdUnico();
         }
 
         public Tarjeta(decimal saldoInicial, Tiempo tiempo)
         {
             _tiempo = tiempo;
             _viajes = new List<DateTime>();
+            Id = GenerarIdUnico();
 
             if (saldoInicial < 0)
             {
@@ -72,7 +77,7 @@ namespace TransporteUrbano
             saldo = saldoInicial;
         }
 
-
+        // MÉTODOS DE CONTROL DE TIEMPO (de issue8)
         protected void RegistrarViaje()
         {
             _viajes.Add(_tiempo.Now());
@@ -98,7 +103,18 @@ namespace TransporteUrbano
             return diferencia.TotalMinutes >= 5;
         }
 
+        // MÉTODOS DE ID (de master)
+        private string GenerarIdUnico()
+        {
+            return $"TARJ-{Guid.NewGuid().ToString().Substring(0, 8).ToUpper()}";
+        }
 
+        public virtual string ObtenerTipoTarjeta()
+        {
+            return "Normal";
+        }
+
+        // MÉTODOS EXISTENTES
         public virtual decimal ObtenerSaldo()
         {
             return saldo;
