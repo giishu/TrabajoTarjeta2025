@@ -7,43 +7,94 @@ namespace TransporteUrbano
     {
         static void Main(string[] args)
         {
-            Console.WriteLine("=== Sistema de Tarjetas de Transporte Urbano ===");
+            Console.WriteLine("=== Probando Nuevas Funcionalidades del Boleto ===");
             Console.WriteLine();
 
-            Tarjeta miTarjeta = new Tarjeta();
-            Console.WriteLine($"Tarjeta creada. Saldo inicial: ${miTarjeta.ObtenerSaldo()}");
+            // Probar tarjeta normal
+            TestTarjetaNormal();
 
-            Console.WriteLine("\nCargando $5000 a la tarjeta...");
-            bool cargaExitosa = miTarjeta.CargarSaldo(5000);
-            Console.WriteLine($"Carga exitosa: {cargaExitosa}");
-            Console.WriteLine($"Nuevo saldo: ${miTarjeta.ObtenerSaldo()}");
+            // Probar medio boleto
+            TestMedioBoleto();
 
-            Colectivo colectivo = new Colectivo("144");
-            Console.WriteLine($"\nColectivo línea {colectivo.Linea} listo");
-            Console.WriteLine($"Tarifa básica: ${colectivo.ObtenerTarifaBasica()}");
+            // Probar saldo negativo
+            TestSaldoNegativo();
 
-            try
-            {
-                Console.WriteLine("\nPagando pasaje...");
-                Boleto boleto = colectivo.PagarCon(miTarjeta);
-                if (boleto != null)
-                {
-                    Console.WriteLine("Boleto generado:");
-                    Console.WriteLine(boleto.ToString());
-                    Console.WriteLine($"Saldo restante en tarjeta: ${miTarjeta.ObtenerSaldo()}");
-                }
-                else
-                {
-                    Console.WriteLine("No se pudo generar el boleto.");
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Error inesperado: {ex.Message}");
-            }
+            // Probar franquicia completa
+            TestFranquiciaCompleta();
 
             Console.WriteLine("\nPresione cualquier tecla para salir...");
             Console.ReadKey();
+        }
+
+        static void TestTarjetaNormal()
+        {
+            Console.WriteLine("\n--- Probando Tarjeta Normal ---");
+            Tarjeta tarjetaNormal = new Tarjeta(5000);
+            Colectivo colectivo = new Colectivo("144");
+
+            Console.WriteLine($"Tarjeta ID: {tarjetaNormal.Id}");
+            Console.WriteLine($"Tipo: {tarjetaNormal.ObtenerTipoTarjeta()}");
+
+            Boleto boleto = colectivo.PagarCon(tarjetaNormal);
+            if (boleto != null)
+            {
+                Console.WriteLine("\nBoleto generado:");
+                Console.WriteLine(boleto.ToString());
+            }
+        }
+
+        static void TestMedioBoleto()
+        {
+            Console.WriteLine("\n--- Probando Medio Boleto ---");
+            MedioBoleto medioBoleto = new MedioBoleto(5000);
+            Colectivo colectivo = new Colectivo("135");
+
+            Console.WriteLine($"Tarjeta ID: {medioBoleto.Id}");
+            Console.WriteLine($"Tipo: {medioBoleto.ObtenerTipoTarjeta()}");
+
+            Boleto boleto = colectivo.PagarCon(medioBoleto);
+            if (boleto != null)
+            {
+                Console.WriteLine("\nBoleto generado:");
+                Console.WriteLine(boleto.ToString());
+                Console.WriteLine($"¿Tarifa reducida? {boleto.TarifaAbonada == 790m}");
+            }
+        }
+
+        static void TestSaldoNegativo()
+        {
+            Console.WriteLine("\n--- Probando Saldo Negativo ---");
+            Tarjeta tarjetaPobre = new Tarjeta(1000);
+            Colectivo colectivo = new Colectivo("115");
+
+            Console.WriteLine($"Saldo inicial: ${tarjetaPobre.ObtenerSaldo()}");
+
+            Boleto boleto = colectivo.PagarCon(tarjetaPobre);
+            if (boleto != null)
+            {
+                Console.WriteLine("\nBoleto con saldo negativo:");
+                Console.WriteLine(boleto.ToString());
+                Console.WriteLine($"¿Tiene saldo negativo? {boleto.TieneSaldoNegativo}");
+                Console.WriteLine($"Monto total abonado: ${boleto.MontoTotalAbonado}");
+            }
+        }
+
+        static void TestFranquiciaCompleta()
+        {
+            Console.WriteLine("\n--- Probando Franquicia Completa ---");
+            FranquiciaCompleta franquicia = new FranquiciaCompleta(2000);
+            Colectivo colectivo = new Colectivo("107");
+
+            Console.WriteLine($"Tarjeta ID: {franquicia.Id}");
+            Console.WriteLine($"Tipo: {franquicia.ObtenerTipoTarjeta()}");
+
+            Boleto boleto = colectivo.PagarCon(franquicia);
+            if (boleto != null)
+            {
+                Console.WriteLine("\nBoleto franquicia completa:");
+                Console.WriteLine(boleto.ToString());
+                Console.WriteLine($"¿Tarifa gratuita? {boleto.TarifaAbonada == 0m}");
+            }
         }
     }
 }

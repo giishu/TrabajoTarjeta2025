@@ -13,13 +13,21 @@ namespace TransporteUrbano
         private const decimal LIMITE_SALDO = 40000;
         private const decimal SALDO_NEGATIVO_PERMITIDO = -1200;
 
+        // NUEVA PROPIEDAD: ID único de tarjeta
+        public string Id { get; private set; }
+
         public Tarjeta()
         {
             saldo = 0;
+            Id = GenerarIdUnico();
         }
 
         public Tarjeta(decimal saldoInicial)
         {
+            // PRIMERO asignar el ID siempre
+            Id = GenerarIdUnico();
+
+            // LUEGO validar el saldo
             if (saldoInicial < 0)
             {
                 Console.WriteLine("Error: El saldo inicial no puede ser negativo. Se establecerá en 0.");
@@ -35,6 +43,19 @@ namespace TransporteUrbano
             saldo = saldoInicial;
         }
 
+        // NUEVO MÉTODO: Generar ID único
+        private string GenerarIdUnico()
+        {
+            return $"TARJ-{Guid.NewGuid().ToString().Substring(0, 8).ToUpper()}";
+        }
+
+        // NUEVO MÉTODO: Obtener tipo de tarjeta
+        public virtual string ObtenerTipoTarjeta()
+        {
+            return "Normal";
+        }
+
+        // MÉTODOS EXISTENTES (se mantienen igual)
         public virtual decimal ObtenerSaldo()
         {
             return saldo;
