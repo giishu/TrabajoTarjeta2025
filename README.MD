@@ -1,4 +1,4 @@
-[![codecov](https://codecov.io/gh/mgonzalesips/TrabajoTarjeta2025/graph/badge.svg?token=XI7V37W69W)](https://codecov.io/gh/mgonzalesips/TrabajoTarjeta2025)
+[![codecov](https://codecov.io/gh/giishu/TrabajoTarjeta2025/graph/badge.svg?token=b832e232-0e47-4cba-baa1-6244f6eafd55)](https://codecov.io/gh/giishu/TrabajoTarjeta2025)
 
 # Trabajo Tarjeta 2025
 
