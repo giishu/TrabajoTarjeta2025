@@ -26,24 +26,27 @@ namespace TransporteUrbano
                 return null;
             }
 
-            // Obtener la tarifa según el tipo de tarjeta
-            decimal tarifaAPagar = ObtenerTarifa(tarjeta);
+            decimal tarifaBase = ObtenerTarifa(tarjeta);
 
-            // Verificar si habrá saldo negativo después del pago
-            bool produciraSaldoNegativo = (tarjeta.ObtenerSaldo() - tarifaAPagar) < 0;
+            decimal tarifaReal = tarifaBase;
+            if (tarjeta is MedioBoleto medioBoleto)
+            {
+                tarifaReal = medioBoleto.ObtenerTarifaReal(tarifaBase);
+            }
 
-            // Intentar descontar el saldo
-            bool pudoDescontar = tarjeta.DescontarSaldo(tarifaAPagar);
+            bool produciraSaldoNegativo = (tarjeta.ObtenerSaldo() - tarifaReal) < 0;
+
+            bool pudoDescontar = tarjeta.DescontarSaldo(tarifaBase);
 
             if (!pudoDescontar)
             {
-                Console.WriteLine($"Error: Saldo insuficiente. Se requieren ${tarifaAPagar} y el saldo disponible (incluyendo viaje plus) no es suficiente.");
+                Console.WriteLine($"Error: Saldo insuficiente. Se requieren ${tarifaReal} y el saldo disponible (incluyendo viaje plus) no es suficiente.");
                 return null;
             }
 
-            // NUEVO: Crear boleto con toda la información
+
             return new Boleto(
-                tarifaAbonada: tarifaAPagar,
+                tarifaAbonada: tarifaReal,
                 saldoRestante: tarjeta.ObtenerSaldo(),
                 lineaColectivo: Linea,
                 tipoTarjeta: tarjeta.ObtenerTipoTarjeta(),

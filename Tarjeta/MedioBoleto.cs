@@ -54,8 +54,19 @@ namespace TransporteUrbano
             int viajesHoy = ObtenerViajesHoy();
             bool puedeViajar = HanPasado5MinutosDesdeUltimoViaje();
             decimal tarifaSugerida = viajesHoy < LIMITE_VIAJES_DIARIOS ? 790m : 1580m;
-            
+
             return (viajesHoy, puedeViajar, tarifaSugerida);
+        }
+
+        public decimal ObtenerTarifaReal(decimal tarifaBase)
+        {
+            int viajesHoy = ObtenerViajesHoy();
+
+            // Si ya usó sus 2 viajes con descuento, cobra tarifa completa
+            if (viajesHoy >= LIMITE_VIAJES_DIARIOS)
+                return tarifaBase * 2; // Tarifa completa (1580)
+
+            return tarifaBase; // Tarifa con descuento (790)
         }
     }
 }
