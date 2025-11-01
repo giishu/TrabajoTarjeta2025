@@ -31,16 +31,15 @@ namespace TransporteUrbano
 
             // Verificar límite de viajes diarios con descuento
             int viajesHoy = ObtenerViajesHoy();
-            decimal tarifaAPagar = viajesHoy < LIMITE_VIAJES_DIARIOS ? monto : monto * 2;
 
-            // Si es tercer viaje o más, pagar tarifa completa (doble)
+            // Si es tercer viaje o más, mostrar mensaje
             if (viajesHoy >= LIMITE_VIAJES_DIARIOS)
             {
                 Console.WriteLine($"Atención: {viajesHoy + 1}° viaje del día - Tarifa completa aplicada");
             }
 
             // Verificar saldo suficiente
-            decimal nuevoSaldo = saldo - tarifaAPagar;
+            decimal nuevoSaldo = saldo - monto;
             if (nuevoSaldo < ObtenerSaldoNegativoPermitido())
                 return false;
 
