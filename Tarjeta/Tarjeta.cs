@@ -174,7 +174,7 @@ namespace TransporteUrbano
                 return false;
 
             saldo = nuevoSaldo;
-            RegistrarViaje(); // NUEVO: Registrar viaje para tracking mensual
+            RegistrarViaje();
             AcreditarCarga();
             return true;
         }

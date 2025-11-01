@@ -37,12 +37,7 @@ namespace TransporteUrbano
             }
             else if (tarjeta is BoletoGratuito boletoGratuito)
             {
-                tarifaReal = boletoGratuito.ObtenerTarifaReal(TARIFA_BASICA);
-            }
-            else if (tarjeta.ObtenerTipoTarjeta() == "Normal")
-            {
-                // NUEVO: Aplicar descuento por uso frecuente a tarjetas normales
-                tarifaReal = tarjeta.CalcularTarifaConDescuento(TARIFA_BASICA);
+                tarifaReal = boletoGratuito.ObtenerTarifaReal(TARIFA_BASICA); // ← CRÍTICO: usar TARIFA_BASICA
             }
 
             // Verificar si habrá saldo negativo después del pago
