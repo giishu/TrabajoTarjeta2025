@@ -7,21 +7,24 @@ namespace TransporteUrbano
     public class Tarjeta
     {
         protected decimal saldo;
+        protected decimal saldoPendiente;
         private readonly List<decimal> cargasValidas = new List<decimal>
         {
             2000, 3000, 4000, 5000, 8000, 10000, 15000, 20000, 25000, 30000
         };
-        private const decimal LIMITE_SALDO = 40000;
-        private const decimal SALDO_NEGATIVO_PERMITIDO = -1200;
+        private const decimal LIMITE_SALDO = 56000m;
+        private const decimal SALDO_NEGATIVO_PERMITIDO = -1200m;
 
-        // PROPIEDADES DE AMBAS RAMAS
         protected Tiempo _tiempo;
         protected List<DateTime> _viajes;
         public string Id { get; private set; }
 
+        public decimal SaldoPendiente => saldoPendiente;
+
         public Tarjeta()
         {
             saldo = 0;
+            saldoPendiente = 0;
             _tiempo = new Tiempo();
             _viajes = new List<DateTime>();
             Id = GenerarIdUnico();
@@ -31,6 +34,7 @@ namespace TransporteUrbano
         {
             _tiempo = new Tiempo();
             _viajes = new List<DateTime>();
+            saldoPendiente = 0;
             Id = GenerarIdUnico();
 
             if (saldoInicial < 0)
@@ -51,6 +55,7 @@ namespace TransporteUrbano
         public Tarjeta(Tiempo tiempo)
         {
             saldo = 0;
+            saldoPendiente = 0;
             _tiempo = tiempo;
             _viajes = new List<DateTime>();
             Id = GenerarIdUnico();
@@ -60,6 +65,7 @@ namespace TransporteUrbano
         {
             _tiempo = tiempo;
             _viajes = new List<DateTime>();
+            saldoPendiente = 0;
             Id = GenerarIdUnico();
 
             if (saldoInicial < 0)
@@ -77,7 +83,6 @@ namespace TransporteUrbano
             saldo = saldoInicial;
         }
 
-        // MÉTODOS DE CONTROL DE TIEMPO (de issue8)
         protected void RegistrarViaje()
         {
             _viajes.Add(_tiempo.Now());
@@ -103,7 +108,6 @@ namespace TransporteUrbano
             return diferencia.TotalMinutes >= 5;
         }
 
-        // MÉTODOS DE ID (de master)
         private string GenerarIdUnico()
         {
             return $"TARJ-{Guid.NewGuid().ToString().Substring(0, 8).ToUpper()}";
@@ -114,7 +118,6 @@ namespace TransporteUrbano
             return "Normal";
         }
 
-        // MÉTODOS EXISTENTES
         public virtual decimal ObtenerSaldo()
         {
             return saldo;
@@ -125,13 +128,39 @@ namespace TransporteUrbano
             if (!cargasValidas.Contains(monto))
                 return false;
 
+            AcreditarCarga();
+
             decimal nuevoSaldo = saldo + monto;
 
-            if (nuevoSaldo > LIMITE_SALDO)
-                return false;
-
-            saldo = nuevoSaldo;
+            if (nuevoSaldo <= LIMITE_SALDO)
+            {
+                saldo = nuevoSaldo;
+            }
+            else
+            {
+                decimal excedente = nuevoSaldo - LIMITE_SALDO;
+                saldo = LIMITE_SALDO;
+                saldoPendiente += excedente;
+                Console.WriteLine($"Carga parcial: ${monto - excedente} acreditado, ${excedente} en saldo pendiente");
+            }
             return true;
+        }
+
+        public void AcreditarCarga()
+        {
+            if (saldoPendiente > 0 && saldo < LIMITE_SALDO)
+            {
+                decimal espacioDisponible = LIMITE_SALDO - saldo;
+                decimal montoAAcreditar = Math.Min(saldoPendiente, espacioDisponible);
+
+                saldo += montoAAcreditar;
+                saldoPendiente -= montoAAcreditar;
+
+                if (montoAAcreditar > 0)
+                {
+                    Console.WriteLine($"Saldo pendiente acreditado: ${montoAAcreditar}");
+                }
+            }
         }
 
         public virtual bool DescontarSaldo(decimal monto)
@@ -145,6 +174,7 @@ namespace TransporteUrbano
                 return false;
 
             saldo = nuevoSaldo;
+            AcreditarCarga();
             return true;
         }
 
@@ -156,6 +186,11 @@ namespace TransporteUrbano
         public decimal ObtenerSaldoNegativoPermitido()
         {
             return SALDO_NEGATIVO_PERMITIDO;
+        }
+
+        public decimal ObtenerLimiteSaldo()
+        {
+            return LIMITE_SALDO;
         }
     }
 }
