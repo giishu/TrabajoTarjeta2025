@@ -12,7 +12,7 @@ namespace TestTransporteUrbano
         [SetUp]
         public void Setup()
         {
-            boleto = new Boleto(1580m, 3420m, "144");
+            boleto = new Boleto(1580m, 3420m, "144", "Normal", "TEST123", false);
         }
 
         [Test]
@@ -21,13 +21,15 @@ namespace TestTransporteUrbano
             Assert.That(boleto.TarifaAbonada, Is.EqualTo(1580m));
             Assert.That(boleto.SaldoRestante, Is.EqualTo(3420m));
             Assert.That(boleto.LineaColectivo, Is.EqualTo("144"));
+            Assert.That(boleto.TipoTarjeta, Is.EqualTo("Normal"));
+            Assert.That(boleto.IdTarjeta, Is.EqualTo("TEST123"));
         }
 
         [Test]
         public void Constructor_EstableceLaFechaAlMomentoDeCreacion()
         {
             DateTime ahora = DateTime.Now;
-            var boletoNuevo = new Boleto(1580m, 3420m, "144");
+            var boletoNuevo = new Boleto(1580m, 3420m, "144", "Normal", "TEST123", false);
 
             Assert.IsNotNull(boletoNuevo.Fecha);
             Assert.That(boletoNuevo.Fecha, Is.EqualTo(ahora).Within(TimeSpan.FromSeconds(1)));
@@ -83,9 +85,9 @@ namespace TestTransporteUrbano
         [Test]
         public void MultiplesInstancias_TienenFechasDiferentes()
         {
-            var boleto1 = new Boleto(1580m, 3420m, "100");
+            var boleto1 = new Boleto(1580m, 3420m, "100", "Normal", "TEST1", false);
             System.Threading.Thread.Sleep(10);
-            var boleto2 = new Boleto(1580m, 2840m, "100");
+            var boleto2 = new Boleto(1580m, 2840m, "100", "Normal", "TEST2", false);
 
             Assert.That(boleto1.Fecha, Is.Not.EqualTo(boleto2.Fecha));
         }
@@ -93,11 +95,12 @@ namespace TestTransporteUrbano
         [Test]
         public void Constructor_ConDiferentesValores_GuardaTodosCorrectamente()
         {
-            var boleto2 = new Boleto(1580m, 8420m, "105");
+            var boleto2 = new Boleto(1580m, 8420m, "105", "Medio Boleto", "MB123", false);
 
             Assert.That(boleto2.TarifaAbonada, Is.EqualTo(1580m));
             Assert.That(boleto2.SaldoRestante, Is.EqualTo(8420m));
             Assert.That(boleto2.LineaColectivo, Is.EqualTo("105"));
+            Assert.That(boleto2.TipoTarjeta, Is.EqualTo("Medio Boleto"));
         }
     }
 }

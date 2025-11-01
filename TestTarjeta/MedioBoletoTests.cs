@@ -1,5 +1,6 @@
 ﻿using NUnit.Framework;
 using TransporteUrbano;
+using System;
 
 public class MedioBoletoTests
 {
@@ -9,7 +10,8 @@ public class MedioBoletoTests
     [SetUp]
     public void Setup()
     {
-        medioBoleto = new MedioBoleto(5000);
+        var tiempoFalso = new TiempoFalso(new DateTime(2024, 10, 14, 10, 0, 0));
+        medioBoleto = new MedioBoleto(5000, tiempoFalso);
         colectivo = new Colectivo("144");
     }
 
@@ -40,20 +42,30 @@ public class MedioBoletoTests
     [Test]
     public void PagarCon_MedioBoleto_MultiplesViajes_SiempreCobraMitad()
     {
-        var mb = new MedioBoleto(10000);
+        var tiempoFalso = new TiempoFalso(new DateTime(2024, 10, 14, 10, 0, 0));
+        var mb = new MedioBoleto(10000, tiempoFalso);
         var col = new Colectivo("100");
 
+        // Primer viaje
         Boleto boleto1 = col.PagarCon(mb);
         Assert.That(boleto1.TarifaAbonada, Is.EqualTo(790m));
         Assert.That(mb.ObtenerSaldo(), Is.EqualTo(9210m));
 
+        // Esperar 6 minutos para el siguiente viaje
+        tiempoFalso.AgregarMinutos(6);
+
+        // Segundo viaje
         Boleto boleto2 = col.PagarCon(mb);
         Assert.That(boleto2.TarifaAbonada, Is.EqualTo(790m));
         Assert.That(mb.ObtenerSaldo(), Is.EqualTo(8420m));
 
+        // Esperar 6 minutos para el siguiente viaje
+        tiempoFalso.AgregarMinutos(6);
+
+        // Tercer viaje - cobra tarifa completa (1580)
         Boleto boleto3 = col.PagarCon(mb);
-        Assert.That(boleto3.TarifaAbonada, Is.EqualTo(790m));
-        Assert.That(mb.ObtenerSaldo(), Is.EqualTo(7630m));
+        Assert.That(boleto3.TarifaAbonada, Is.EqualTo(1580m)); // Tarifa completa en el 3er viaje
+        Assert.That(mb.ObtenerSaldo(), Is.EqualTo(6840m)); // 8420 - 1580
     }
 
     [Test]
@@ -69,17 +81,19 @@ public class MedioBoletoTests
     [Test]
     public void MedioBoleto_ConSaldoInsuficiente_NoGeneraBoleto()
     {
-        var mb = new MedioBoleto(500);
+        var tiempoFalso = new TiempoFalso(new DateTime(2024, 10, 14, 10, 0, 0));
+        var mb = new MedioBoleto(500, tiempoFalso);
         Boleto boleto = colectivo.PagarCon(mb);
 
         Assert.IsNotNull(boleto);
-        Assert.That(mb.ObtenerSaldo(), Is.EqualTo(-290m)); // 500 - 790
+        Assert.That(mb.ObtenerSaldo(), Is.EqualTo(-290m)); 
     }
 
     [Test]
     public void MedioBoleto_PermiteSaldoNegativoHasta1200()
     {
-        var mb = new MedioBoleto(400);
+        var tiempoFalso = new TiempoFalso(new DateTime(2024, 10, 14, 10, 0, 0));
+        var mb = new MedioBoleto(400, tiempoFalso);
         Boleto boleto = colectivo.PagarCon(mb);
 
         Assert.IsNotNull(boleto);
