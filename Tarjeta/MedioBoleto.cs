@@ -44,7 +44,8 @@ namespace TransporteUrbano
                 return false;
 
             saldo = nuevoSaldo;
-            RegistrarViaje();
+            RegistrarViaje(); // Registrar viaje antes de acreditar carga
+            AcreditarCarga(); // Llamar a AcreditarCarga después de registrar
             return true;
         }
 
@@ -66,6 +67,17 @@ namespace TransporteUrbano
                 return tarifaBase * 2; // Tarifa completa (1580)
 
             return tarifaBase; // Tarifa con descuento (790)
+        }
+
+        // NUEVO: Override para que MedioBoleto NO tenga descuento por uso frecuente
+        public override decimal ObtenerDescuentoUsoFrecuente(decimal tarifaBase)
+        {
+            return 0; // Medio Boleto no tiene descuento por uso frecuente
+        }
+
+        public override decimal CalcularTarifaConDescuento(decimal tarifaBase)
+        {
+            return tarifaBase; // No aplica descuento por uso frecuente
         }
     }
 }

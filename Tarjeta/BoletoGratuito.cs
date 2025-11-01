@@ -43,7 +43,8 @@ namespace TransporteUrbano
                 saldo -= monto;
             }
 
-            RegistrarViaje();
+            RegistrarViaje(); // Registrar viaje
+            AcreditarCarga(); // Acreditar carga pendiente si hay
             return true;
         }
 
@@ -66,6 +67,17 @@ namespace TransporteUrbano
             decimal tarifaSugerida = viajesHoy < LIMITE_VIAJES_GRATUITOS ? 0m : 1580m;
 
             return (viajesHoy, puedeViajar, tarifaSugerida);
+        }
+
+        // NUEVO: Override para que BoletoGratuito NO tenga descuento por uso frecuente
+        public override decimal ObtenerDescuentoUsoFrecuente(decimal tarifaBase)
+        {
+            return 0; // Boleto Gratuito no tiene descuento por uso frecuente
+        }
+
+        public override decimal CalcularTarifaConDescuento(decimal tarifaBase)
+        {
+            return tarifaBase; // No aplica descuento por uso frecuente
         }
     }
 }
