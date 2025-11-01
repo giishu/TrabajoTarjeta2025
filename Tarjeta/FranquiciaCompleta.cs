@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 
 namespace TransporteUrbano
 {
@@ -27,6 +27,17 @@ namespace TransporteUrbano
             return "Franquicia Completa";
         }
 
+        // NUEVO: Override para que FranquiciaCompleta NO tenga descuento por uso frecuente
+        public override decimal ObtenerDescuentoUsoFrecuente(decimal tarifaBase)
+        {
+            return 0; // Franquicia Completa no tiene descuento por uso frecuente (ya es gratis)
+        }
+
+        public override decimal CalcularTarifaConDescuento(decimal tarifaBase)
+        {
+            return tarifaBase; // No aplica descuento por uso frecuente
+        }
+
         /// <summary>
         /// Verifica si la franquicia puede viajar en el horario actual
         /// Horario permitido: 6:00 a 22:00 (6 AM a 10 PM)
@@ -35,7 +46,7 @@ namespace TransporteUrbano
         {
             DateTime ahora = _tiempo.Now();
             int hora = ahora.Hour;
-
+            
             // Permite viajes entre las 6:00 (inclusive) y las 22:00 (exclusive)
             // Es decir: 6:00:00 hasta 21:59:59
             return hora >= 6 && hora < 22;
