@@ -174,8 +174,65 @@ namespace TransporteUrbano
                 return false;
 
             saldo = nuevoSaldo;
+            RegistrarViaje(); // NUEVO: Registrar viaje para tracking mensual
             AcreditarCarga();
             return true;
+        }
+
+        // ============================================
+        // NUEVAS FUNCIONALIDADES: USO FRECUENTE
+        // ============================================
+
+        /// <summary>
+        /// Obtiene la cantidad de viajes realizados en el mes actual
+        /// </summary>
+        public int ObtenerViajesDelMes()
+        {
+            DateTime ahora = _tiempo.Now();
+            int mesActual = ahora.Month;
+            int anioActual = ahora.Year;
+
+            return _viajes.Count(v => v.Month == mesActual && v.Year == anioActual);
+        }
+
+        /// <summary>
+        /// Calcula el descuento por uso frecuente según la cantidad de viajes del mes
+        /// Solo aplica a tarjetas normales (no a franquicias)
+        /// NOTA: Este método considera el viaje ACTUAL (el que se está por hacer)
+        /// </summary>
+        public virtual decimal ObtenerDescuentoUsoFrecuente(decimal tarifaBase)
+        {
+            // Por defecto, solo las tarjetas normales tienen descuento
+            // Las clases derivadas pueden sobrescribir este método
+            if (ObtenerTipoTarjeta() != "Normal")
+                return 0;
+
+            // El viaje actual será el viaje número (viajesDelMes + 1)
+            int viajesDelMes = ObtenerViajesDelMes();
+            int viajeActual = viajesDelMes + 1;
+
+            if (viajeActual >= 30 && viajeActual < 60)
+            {
+                // 20% de descuento
+                return tarifaBase * 0.20m;
+            }
+            else if (viajeActual >= 60 && viajeActual <= 80)
+            {
+                // 25% de descuento
+                return tarifaBase * 0.25m;
+            }
+
+            // Viajes 1-29 y 81+: sin descuento
+            return 0;
+        }
+
+        /// <summary>
+        /// Calcula la tarifa final considerando el descuento por uso frecuente
+        /// </summary>
+        public virtual decimal CalcularTarifaConDescuento(decimal tarifaBase)
+        {
+            decimal descuento = ObtenerDescuentoUsoFrecuente(tarifaBase);
+            return tarifaBase - descuento;
         }
 
         public List<decimal> ObtenerCargasValidas()
