@@ -26,17 +26,25 @@ namespace TransporteUrbano
                 return null;
             }
 
+            // Obtener la tarifa según el tipo de tarjeta
             decimal tarifaBase = ObtenerTarifa(tarjeta);
 
+            // Para MedioBoleto y BoletoGratuito, obtener la tarifa real considerando límites
             decimal tarifaReal = tarifaBase;
             if (tarjeta is MedioBoleto medioBoleto)
             {
                 tarifaReal = medioBoleto.ObtenerTarifaReal(tarifaBase);
             }
+            else if (tarjeta is BoletoGratuito boletoGratuito)
+            {
+                tarifaReal = boletoGratuito.ObtenerTarifaReal(TARIFA_BASICA); // ← CRÍTICO: usar TARIFA_BASICA
+            }
 
+            // Verificar si habrá saldo negativo después del pago
             bool produciraSaldoNegativo = (tarjeta.ObtenerSaldo() - tarifaReal) < 0;
 
-            bool pudoDescontar = tarjeta.DescontarSaldo(tarifaBase);
+            // Intentar descontar el saldo
+            bool pudoDescontar = tarjeta.DescontarSaldo(tarifaReal);
 
             if (!pudoDescontar)
             {
@@ -44,7 +52,7 @@ namespace TransporteUrbano
                 return null;
             }
 
-
+            // Crear boleto con la tarifa real cobrada
             return new Boleto(
                 tarifaAbonada: tarifaReal,
                 saldoRestante: tarjeta.ObtenerSaldo(),
@@ -57,10 +65,12 @@ namespace TransporteUrbano
 
         protected virtual decimal ObtenerTarifa(Tarjeta tarjeta)
         {
-            if (tarjeta is FranquiciaCompleta || tarjeta is BoletoGratuito)
+            if (tarjeta is FranquiciaCompleta)
                 return 0;
             else if (tarjeta is MedioBoleto)
                 return TARIFA_BASICA / 2;
+            else if (tarjeta is BoletoGratuito)
+                return 0; // Este valor será ajustado por ObtenerTarifaReal()
             else
                 return TARIFA_BASICA;
         }
