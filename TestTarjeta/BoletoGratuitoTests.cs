@@ -1,4 +1,5 @@
-﻿using NUnit.Framework;
+﻿// <artifact filename="BoletoGratuitoTests.cs">
+using NUnit.Framework;
 using TransporteUrbano;
 using System;
 
@@ -45,11 +46,15 @@ namespace TestTransporteUrbano
         [Test]
         public void PagarCon_BoletoGratuito_NoDescontaSaldo()
         {
-            var bg = new BoletoGratuito(5000);
-            Boleto boleto = colectivo.PagarCon(bg);
+            // Usamos un tiempo válido (lunes a las 10:00) para asegurar que el viaje sea permitido
+            var tiempoFalso = new TiempoFalso(new DateTime(2025, 4, 7, 10, 0, 0)); // Lunes 10:00
+            var bg = new BoletoGratuito(5000, tiempoFalso);
+            var colectivoLocal = new Colectivo("144");
 
-            Assert.IsNotNull(boleto);
-            Assert.That(bg.ObtenerSaldo(), Is.EqualTo(5000m)); // Mantiene el saldo
+            Boleto boleto = colectivoLocal.PagarCon(bg);
+
+            Assert.IsNotNull(boleto, "El boleto no debería ser null: el viaje debe estar permitido en horario hábil.");
+            Assert.That(bg.ObtenerSaldo(), Is.EqualTo(5000m), "El saldo no debería cambiar en los primeros dos viajes gratuitos.");
         }
 
         [Test]
@@ -108,3 +113,4 @@ namespace TestTransporteUrbano
         }
     }
 }
+// </artifact>

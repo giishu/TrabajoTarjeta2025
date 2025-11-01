@@ -14,7 +14,7 @@ namespace TransporteUrbano
             // Verificar restricción horaria
             if (!PuedeViajarEnEsteHorario())
             {
-                Console.WriteLine("Error: Franquicia Completa no puede viajar en este horario (solo permite viajes entre 6:00 y 22:00)");
+                Console.WriteLine("Error: Franquicia Completa no puede viajar en este horario (solo permite viajes de lunes a viernes de 6:00 a 22:00)");
                 return false;
             }
 
@@ -27,10 +27,9 @@ namespace TransporteUrbano
             return "Franquicia Completa";
         }
 
-        // NUEVO: Override para que FranquiciaCompleta NO tenga descuento por uso frecuente
         public override decimal ObtenerDescuentoUsoFrecuente(decimal tarifaBase)
         {
-            return 0; // Franquicia Completa no tiene descuento por uso frecuente (ya es gratis)
+            return 0; // Franquicia Completa no tiene descuento por uso frecuente
         }
 
         public override decimal CalcularTarifaConDescuento(decimal tarifaBase)
@@ -40,24 +39,29 @@ namespace TransporteUrbano
 
         /// <summary>
         /// Verifica si la franquicia puede viajar en el horario actual
-        /// Horario permitido: 6:00 a 22:00 (6 AM a 10 PM)
+        /// Horario permitido: Lunes a Viernes de 6:00 a 22:00
         /// </summary>
         public bool PuedeViajarEnEsteHorario()
         {
             DateTime ahora = _tiempo.Now();
             int hora = ahora.Hour;
-            
-            // Permite viajes entre las 6:00 (inclusive) y las 22:00 (exclusive)
-            // Es decir: 6:00:00 hasta 21:59:59
-            return hora >= 6 && hora < 22;
+            DayOfWeek dia = ahora.DayOfWeek;
+
+            // Verificar que sea lunes a viernes
+            bool esDiaHabil = dia >= DayOfWeek.Monday && dia <= DayOfWeek.Friday;
+
+            // Verificar horario 6:00 a 22:00 (6:00:00 hasta 21:59:59)
+            bool esHorarioPermitido = hora >= 6 && hora < 22;
+
+            return esDiaHabil && esHorarioPermitido;
         }
 
         /// <summary>
-        /// Obtiene el horario permitido para viajar
+        /// Obtiene el horario y días permitidos para viajar
         /// </summary>
-        public (int horaInicio, int horaFin) ObtenerHorarioPermitido()
+        public (int horaInicio, int horaFin, string dias) ObtenerHorarioPermitido()
         {
-            return (6, 22);
+            return (6, 22, "Lunes a Viernes");
         }
     }
 }
