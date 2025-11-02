@@ -17,8 +17,15 @@ namespace TransporteUrbano
 
         protected Tiempo _tiempo;
         protected List<DateTime> _viajes;
-        public string Id { get; private set; }
 
+        // CAMPOS PARA TRASBORDOS
+        private DateTime? _ultimoViajeConPago;
+        private string _ultimaLineaUsada;
+
+        // CAMPO PARA USO FRECUENTE - Lista de viajes donde se pagó
+        protected List<DateTime> _viajesPagados;
+
+        public string Id { get; private set; }
         public decimal SaldoPendiente => saldoPendiente;
 
         public Tarjeta()
@@ -27,15 +34,21 @@ namespace TransporteUrbano
             saldoPendiente = 0;
             _tiempo = new Tiempo();
             _viajes = new List<DateTime>();
+            _viajesPagados = new List<DateTime>();
             Id = GenerarIdUnico();
+            _ultimoViajeConPago = null;
+            _ultimaLineaUsada = null;
         }
 
         public Tarjeta(decimal saldoInicial)
         {
             _tiempo = new Tiempo();
             _viajes = new List<DateTime>();
+            _viajesPagados = new List<DateTime>();
             saldoPendiente = 0;
             Id = GenerarIdUnico();
+            _ultimoViajeConPago = null;
+            _ultimaLineaUsada = null;
 
             if (saldoInicial < 0)
             {
@@ -58,15 +71,21 @@ namespace TransporteUrbano
             saldoPendiente = 0;
             _tiempo = tiempo;
             _viajes = new List<DateTime>();
+            _viajesPagados = new List<DateTime>();
             Id = GenerarIdUnico();
+            _ultimoViajeConPago = null;
+            _ultimaLineaUsada = null;
         }
 
         public Tarjeta(decimal saldoInicial, Tiempo tiempo)
         {
             _tiempo = tiempo;
             _viajes = new List<DateTime>();
+            _viajesPagados = new List<DateTime>();
             saldoPendiente = 0;
             Id = GenerarIdUnico();
+            _ultimoViajeConPago = null;
+            _ultimaLineaUsada = null;
 
             if (saldoInicial < 0)
             {
@@ -86,6 +105,12 @@ namespace TransporteUrbano
         protected void RegistrarViaje()
         {
             _viajes.Add(_tiempo.Now());
+        }
+
+        // Método para registrar viajes pagados (cuando monto > 0)
+        protected void RegistrarViajePagado()
+        {
+            _viajesPagados.Add(_tiempo.Now());
         }
 
         protected int ObtenerViajesHoy()
@@ -175,64 +200,96 @@ namespace TransporteUrbano
 
             saldo = nuevoSaldo;
             RegistrarViaje();
+
+            // Si pagó algo (no trasbordo), registrar como viaje pagado
+            if (monto > 0)
+            {
+                RegistrarViajePagado();
+            }
+
             AcreditarCarga();
             return true;
         }
 
         // ============================================
-        // NUEVAS FUNCIONALIDADES: USO FRECUENTE
+        // FUNCIONALIDAD: USO FRECUENTE
         // ============================================
 
-        /// <summary>
-        /// Obtiene la cantidad de viajes realizados en el mes actual
-        /// </summary>
         public int ObtenerViajesDelMes()
         {
             DateTime ahora = _tiempo.Now();
             int mesActual = ahora.Month;
             int anioActual = ahora.Year;
 
-            return _viajes.Count(v => v.Month == mesActual && v.Year == anioActual);
+            // Contar solo viajes PAGADOS del mes actual
+            return _viajesPagados.Count(v => v.Month == mesActual && v.Year == anioActual);
         }
 
-        /// <summary>
-        /// Calcula el descuento por uso frecuente según la cantidad de viajes del mes
-        /// Solo aplica a tarjetas normales (no a franquicias)
-        /// NOTA: Este método considera el viaje ACTUAL (el que se está por hacer)
-        /// </summary>
         public virtual decimal ObtenerDescuentoUsoFrecuente(decimal tarifaBase)
         {
-            // Por defecto, solo las tarjetas normales tienen descuento
-            // Las clases derivadas pueden sobrescribir este método
             if (ObtenerTipoTarjeta() != "Normal")
                 return 0;
 
-            // El viaje actual será el viaje número (viajesDelMes + 1)
-            int viajesDelMes = ObtenerViajesDelMes();
-            int viajeActual = viajesDelMes + 1;
+            int viajesEsteMes = ObtenerViajesDelMes();
+            int proximoViaje = viajesEsteMes + 1;
 
-            if (viajeActual >= 30 && viajeActual < 60)
-            {
-                // 20% de descuento
+            if (proximoViaje >= 30 && proximoViaje <= 59)
                 return tarifaBase * 0.20m;
-            }
-            else if (viajeActual >= 60 && viajeActual <= 80)
-            {
-                // 25% de descuento
+            else if (proximoViaje >= 60 && proximoViaje <= 80)
                 return tarifaBase * 0.25m;
-            }
-
-            // Viajes 1-29 y 81+: sin descuento
-            return 0;
+            else
+                return 0m;
         }
 
-        /// <summary>
-        /// Calcula la tarifa final considerando el descuento por uso frecuente
-        /// </summary>
         public virtual decimal CalcularTarifaConDescuento(decimal tarifaBase)
         {
             decimal descuento = ObtenerDescuentoUsoFrecuente(tarifaBase);
             return tarifaBase - descuento;
+        }
+
+        // ============================================
+        // FUNCIONALIDAD: TRASBORDOS
+        // ============================================
+
+        public bool PuedeHacerTrasbordo(string lineaColectivo)
+        {
+            if (_ultimoViajeConPago == null || _ultimaLineaUsada == null)
+                return false;
+
+            if (_ultimaLineaUsada == lineaColectivo)
+                return false;
+
+            DateTime ahora = _tiempo.Now();
+            TimeSpan diferencia = ahora - _ultimoViajeConPago.Value;
+            if (diferencia.TotalHours >= 1)
+                return false;
+
+            if (!EsHorarioTrasbordo(ahora))
+                return false;
+
+            return true;
+        }
+
+        private bool EsHorarioTrasbordo(DateTime fecha)
+        {
+            DayOfWeek dia = fecha.DayOfWeek;
+            int hora = fecha.Hour;
+
+            bool esDiaPermitido = dia >= DayOfWeek.Monday && dia <= DayOfWeek.Saturday;
+            bool esHorarioPermitido = hora >= 7 && hora < 22;
+
+            return esDiaPermitido && esHorarioPermitido;
+        }
+
+        public void RegistrarViajeConPago(string lineaColectivo)
+        {
+            _ultimoViajeConPago = _tiempo.Now();
+            _ultimaLineaUsada = lineaColectivo;
+        }
+
+        public (DateTime? fecha, string linea) ObtenerUltimoViajeConPago()
+        {
+            return (_ultimoViajeConPago, _ultimaLineaUsada);
         }
 
         public List<decimal> ObtenerCargasValidas()
