@@ -9,57 +9,67 @@ namespace TransporteUrbano
 
         public Colectivo(string linea)
         {
-            if (string.IsNullOrWhiteSpace(linea))
-            {
-                Console.WriteLine("Error: La línea del colectivo no puede estar vacía. Se establecerá como 'N/A'.");
-                Linea = "N/A";
-                return;
-            }
-            Linea = linea;
+            Linea = string.IsNullOrWhiteSpace(linea) ? "N/A" : linea;
         }
 
         public Boleto PagarCon(Tarjeta tarjeta)
         {
-            if (tarjeta == null)
-            {
-                Console.WriteLine("Error: La tarjeta no puede ser null.");
-                return null;
-            }
+            if (tarjeta == null) return null;
 
-            // Obtener la tarifa según el tipo de tarjeta
+            // 1. Verificar si es trasbordo
+            bool esTrasbordo = tarjeta.PuedeHacerTrasbordo(Linea);
+
+            // 2. Obtener tarifa base según tipo de tarjeta
             decimal tarifaBase = ObtenerTarifa(tarjeta);
-
-            // Para MedioBoleto y BoletoGratuito, obtener la tarifa real considerando límites
             decimal tarifaReal = tarifaBase;
-            if (tarjeta is MedioBoleto medioBoleto)
+
+            // 3. Si NO es trasbordo, calcular la tarifa real según el tipo de tarjeta
+            if (!esTrasbordo)
             {
-                tarifaReal = medioBoleto.ObtenerTarifaReal(tarifaBase);
+                // Para tarjetas normales: aplicar descuento por uso frecuente
+                if (tarjeta.ObtenerTipoTarjeta() == "Normal")
+                {
+                    tarifaReal = tarjeta.CalcularTarifaConDescuento(tarifaBase);
+                }
+                // Para medio boleto: aplicar su lógica específica
+                else if (tarjeta is MedioBoleto mb)
+                {
+                    tarifaReal = mb.ObtenerTarifaReal(tarifaBase);
+                }
+                // Para boleto gratuito: aplicar su lógica específica
+                else if (tarjeta is BoletoGratuito bg)
+                {
+                    tarifaReal = bg.ObtenerTarifaReal(TARIFA_BASICA);
+                }
+                // FranquiciaCompleta ya retorna 0 en ObtenerTarifa
             }
-            else if (tarjeta is BoletoGratuito boletoGratuito)
+            else
             {
-                tarifaReal = boletoGratuito.ObtenerTarifaReal(TARIFA_BASICA); // ← CRÍTICO: usar TARIFA_BASICA
+                // Si es trasbordo, tarifa = 0
+                tarifaReal = 0;
             }
 
-            // Verificar si habrá saldo negativo después del pago
-            bool produciraSaldoNegativo = (tarjeta.ObtenerSaldo() - tarifaReal) < 0;
+            // 4. Verificar si quedará con saldo negativo
+            bool saldoNegativo = (tarjeta.ObtenerSaldo() - tarifaReal) < 0;
 
-            // Intentar descontar el saldo
-            bool pudoDescontar = tarjeta.DescontarSaldo(tarifaReal);
+            // 5. Intentar descontar el saldo
+            bool pudoPagar = tarjeta.DescontarSaldo(tarifaReal);
 
-            if (!pudoDescontar)
-            {
-                Console.WriteLine($"Error: Saldo insuficiente. Se requieren ${tarifaReal} y el saldo disponible (incluyendo viaje plus) no es suficiente.");
-                return null;
-            }
+            if (!pudoPagar) return null;
 
-            // Crear boleto con la tarifa real cobrada
+            // 6. Registrar el viaje (incluso si es trasbordo gratuito)
+            // Esto actualiza la línea para futuros trasbordos
+            tarjeta.RegistrarViajeConPago(Linea);
+
+            // 7. Crear y retornar el boleto
             return new Boleto(
                 tarifaAbonada: tarifaReal,
                 saldoRestante: tarjeta.ObtenerSaldo(),
                 lineaColectivo: Linea,
                 tipoTarjeta: tarjeta.ObtenerTipoTarjeta(),
                 idTarjeta: tarjeta.Id,
-                tieneSaldoNegativo: produciraSaldoNegativo
+                tieneSaldoNegativo: saldoNegativo,
+                esTrasbordo: esTrasbordo
             );
         }
 
@@ -67,17 +77,14 @@ namespace TransporteUrbano
         {
             if (tarjeta is FranquiciaCompleta)
                 return 0;
-            else if (tarjeta is MedioBoleto)
+            if (tarjeta is MedioBoleto)
                 return TARIFA_BASICA / 2;
-            else if (tarjeta is BoletoGratuito)
-                return 0; // Este valor será ajustado por ObtenerTarifaReal()
-            else
-                return TARIFA_BASICA;
-        }
+            if (tarjeta is BoletoGratuito)
+                return 0;
 
-        public decimal ObtenerTarifaBasica()
-        {
             return TARIFA_BASICA;
         }
+
+        public decimal ObtenerTarifaBasica() => TARIFA_BASICA;
     }
 }
