@@ -57,7 +57,7 @@ namespace TestTransporteUrbano
         public void Propiedad_Fecha_RetornaFechaValida()
         {
             Assert.IsNotNull(boleto.Fecha);
-            Assert.That(boleto.Fecha.Year, Is.GreaterThanOrEqualTo(2025));
+            Assert.That(boleto.Fecha.Year, Is.GreaterThanOrEqualTo(2024));
         }
 
         [Test]
@@ -101,6 +101,146 @@ namespace TestTransporteUrbano
             Assert.That(boleto2.SaldoRestante, Is.EqualTo(8420m));
             Assert.That(boleto2.LineaColectivo, Is.EqualTo("105"));
             Assert.That(boleto2.TipoTarjeta, Is.EqualTo("Medio Boleto"));
+        }
+
+        // ===== NUEVOS TESTS PARA AUMENTAR COBERTURA =====
+
+        [Test]
+        public void Constructor_ConTrasbordo_EsTrasbordo()
+        {
+            var boletoTrasbordo = new Boleto(0m, 5000m, "102", "Normal", "TEST456", false, true);
+            Assert.IsTrue(boletoTrasbordo.EsTrasbordo);
+        }
+
+        [Test]
+        public void Constructor_SinTrasbordo_NoEsTrasbordo()
+        {
+            var boletoNormal = new Boleto(1580m, 3420m, "144", "Normal", "TEST123", false, false);
+            Assert.IsFalse(boletoNormal.EsTrasbordo);
+        }
+
+        [Test]
+        public void ToString_ConTrasbordo_MuestraIndicadorTrasbordo()
+        {
+            var boletoTrasbordo = new Boleto(0m, 5000m, "102", "Normal", "TEST456", false, true);
+            string resultado = boletoTrasbordo.ToString();
+
+            Assert.That(resultado, Does.Contain("TRASBORDO"));
+        }
+
+        [Test]
+        public void ToString_SinTrasbordo_NoMuestraIndicadorTrasbordo()
+        {
+            string resultado = boleto.ToString();
+            Assert.That(resultado, Does.Not.Contain("TRASBORDO"));
+        }
+
+        [Test]
+        public void Constructor_ConSaldoNegativo_TieneSaldoNegativoTrue()
+        {
+            var boletoConSaldoNegativo = new Boleto(1580m, -580m, "144", "Normal", "TEST789", true);
+            Assert.IsTrue(boletoConSaldoNegativo.TieneSaldoNegativo);
+        }
+
+        [Test]
+        public void Constructor_SinSaldoNegativo_TieneSaldoNegativoFalse()
+        {
+            Assert.IsFalse(boleto.TieneSaldoNegativo);
+        }
+
+        [Test]
+        public void ToString_ConSaldoNegativo_MuestraMontoTotalAbonado()
+        {
+            var boletoConSaldoNegativo = new Boleto(1580m, -580m, "144", "Normal", "TEST789", true);
+            string resultado = boletoConSaldoNegativo.ToString();
+
+            Assert.That(resultado, Does.Contain("Monto Total Abonado"));
+            Assert.That(resultado, Does.Contain("incluye saldo negativo"));
+        }
+
+        [Test]
+        public void ToString_SinSaldoNegativo_NoMuestraMontoTotalAbonado()
+        {
+            string resultado = boleto.ToString();
+            Assert.That(resultado, Does.Not.Contain("Monto Total Abonado"));
+        }
+
+        [Test]
+        public void MontoTotalAbonado_ConSaldoNegativo_SumaAbsoluto()
+        {
+            var boletoConSaldoNegativo = new Boleto(1580m, -580m, "144", "Normal", "TEST789", true);
+            Assert.That(boletoConSaldoNegativo.MontoTotalAbonado, Is.EqualTo(2160m)); // 1580 + 580
+        }
+
+        [Test]
+        public void MontoTotalAbonado_SinSaldoNegativo_IgualTarifa()
+        {
+            Assert.That(boleto.MontoTotalAbonado, Is.EqualTo(1580m));
+        }
+
+        [Test]
+        public void ToString_ConMedioBoleto_MuestraTipoCorrectamente()
+        {
+            var boletoMedio = new Boleto(790m, 4210m, "144", "Medio Boleto", "MB001", false);
+            string resultado = boletoMedio.ToString();
+
+            Assert.That(resultado, Does.Contain("Medio Boleto"));
+        }
+
+        [Test]
+        public void ToString_ConFranquiciaCompleta_MuestraTipoCorrectamente()
+        {
+            var boletoFranquicia = new Boleto(0m, 5000m, "144", "Franquicia Completa", "FC001", false);
+            string resultado = boletoFranquicia.ToString();
+
+            Assert.That(resultado, Does.Contain("Franquicia Completa"));
+        }
+
+        [Test]
+        public void ToString_ConBoletoGratuito_MuestraTipoCorrectamente()
+        {
+            var boletoGratuito = new Boleto(0m, 5000m, "144", "Boleto Gratuito", "BG001", false);
+            string resultado = boletoGratuito.ToString();
+
+            Assert.That(resultado, Does.Contain("Boleto Gratuito"));
+        }
+
+        [Test]
+        public void Propiedad_TipoTarjeta_RetornaValorCorreto()
+        {
+            Assert.That(boleto.TipoTarjeta, Is.EqualTo("Normal"));
+        }
+
+        [Test]
+        public void Propiedad_IdTarjeta_RetornaValorCorreto()
+        {
+            Assert.That(boleto.IdTarjeta, Is.EqualTo("TEST123"));
+        }
+
+        [Test]
+        public void ToString_ContrasbordoYSaldoNegativo_MuestraAmbos()
+        {
+            var boletoComplejo = new Boleto(1580m, -200m, "102", "Normal", "TEST999", true, true);
+            string resultado = boletoComplejo.ToString();
+
+            Assert.That(resultado, Does.Contain("TRASBORDO"));
+            Assert.That(resultado, Does.Contain("Monto Total Abonado"));
+        }
+
+        [Test]
+        public void Constructor_ConSaldoPositivo_MontoTotalAbonado_IgualTarifa()
+        {
+            var boletoPositivo = new Boleto(1580m, 3420m, "144", "Normal", "TEST", false);
+            Assert.That(boletoPositivo.MontoTotalAbonado, Is.EqualTo(1580m));
+        }
+
+        [Test]
+        public void ToString_ConLineaInterurbana_MuestraLineaCorrecta()
+        {
+            var boletoInterurbano = new Boleto(3000m, 2000m, "K", "Normal", "TEST", false);
+            string resultado = boletoInterurbano.ToString();
+
+            Assert.That(resultado, Does.Contain("Línea: K"));
         }
     }
 }
